@@ -1,0 +1,3 @@
+[submodule "external/uloganalysis"]
+	path = external/uloganalysis
+	url = git@github.com:Stifael/uloganalysis.git
