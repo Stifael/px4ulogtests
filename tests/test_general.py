@@ -22,6 +22,9 @@ def getfilepath():
 
 
 def setup_module(module):
+    """
+    Check if file exists. Otherwise don't bother to run all the tests
+    """
     filepath = getfilepath()
     # ensure it is a ulg file
     base, ext = os.path.splitext(filepath)
@@ -30,6 +33,10 @@ def setup_module(module):
 
 
 class TestAttitude:
+    """
+    Test Attitude related constraints
+    """
+
     def setup_class(self):
         filepath = getfilepath()
         topics = [
@@ -59,3 +66,20 @@ class TestAttitude:
                 > man_tilt
             )
         ].empty
+
+
+# class TestSomething:
+#
+#    def setup_class(self):
+#        # get the required data
+#        filepath = getfilepath()
+#        topics = [
+#            ""
+#        ]
+#        self.ulog = pyulog.ULog(filepath, topics)
+#        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+#
+#    def test_1(self):
+#        assert True
+#    def test_2(self):
+#        assert True
