@@ -53,13 +53,13 @@ deactivate
 ### test a ulog file 
 To test a specific ulog file, put that file into the `inputlog` directory. Make sure that only one file is present, otherwise the first file found will be chosen. (TODO improve how ulog files are read)
 
-All the tests are present in the `tests` directory. Tests should be split into tests that apply for any ulog file and tests that are coupled to a specific simulated test.
+All the tests are in the `tests` directory. Tests should be split into tests that apply for any ulog file and tests that are coupled to a specific simulated test.
 
 To run general tests:
 ```bash
 py.test tests/test_general.py
 ```
 
-With the current default log, test for tilt will fails because the vehicle flipped upside down during real flight. 
+With the current default log, the test for tilt will fail because the vehicle flipped during the actual flight. 
 
 
