@@ -87,11 +87,6 @@ class TestRTLHeight:
 
 
    def test_rtl(self):
-       # TODO adjust this test to also work with cone (only for yuneec)
-        NAVIGATION_STATE_AUTO_RTL = 5           # see https://github.com/PX4/Firmware/blob/master/msg/vehicle_status.msg
-        max_height_within_RTL_MIN_DIST = 10     # within this radius, the drone should not go higher than this value after RTL has been triggered
-        thresh = 1                              # Threshold for position inaccuracies
-
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
             loginfo.get_param(self.ulog, "RTL_MIN_DIST", 0)
@@ -99,6 +94,12 @@ class TestRTLHeight:
         rtl_return_alt = (
             loginfo.get_param(self.ulog, "RTL_RETURN_ALT", 0)
         )
+        rtl_cone_dist = (
+            loginfo.get_param(self.ulog, "RTL_CONE_DIST", 0)
+        )
+
+        NAVIGATION_STATE_AUTO_RTL = 5           # see https://github.com/PX4/Firmware/blob/master/msg/vehicle_status.msg
+        thresh = 1                              # Threshold for position inaccuracies, in meters
 
         posanl.add_horizontal_distance(self.df)
 
@@ -113,12 +114,17 @@ class TestRTLHeight:
             self.df.T_vehicle_status_0__F_nav_state.iloc[i+1] == NAVIGATION_STATE_AUTO_RTL:
                 distance_after_RTL.append(self.df.T_vehicle_local_position_0__NF_abs_horizontal_dist.iloc[i])
                 height_after_RTL.append(abs(self.df.T_vehicle_local_position_0__F_z.iloc[i]))
+
+        if rtl_cone_dist > 0:
+            max_height_within_RTL_MIN_DIST = 2 * distance_after_RTL[0]  # Drone should not rise higher than height defined by a cone (definition taken from rtl.cpp file in firmware)
+        else:
+            max_height_within_RTL_MIN_DIST = height_after_RTL[0]        # If no cone is defined, drone should not rise at all within certain radius around home
         
         # check if a value of the z position after triggering RTL is larger than allowed value
-        if (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] < max_height_within_RTL_MIN_DIST):  # TODO: is this second statement correct? what about 'cone'shape in a certain radius around home?
-            assert max(height_after_RTL) < max_height_within_RTL_MIN_DIST
+        if (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] < max_height_within_RTL_MIN_DIST):
+            assert max(height_after_RTL) < max_height_within_RTL_MIN_DIST + thresh
 
-        elif (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] > max_height_within_RTL_MIN_DIST):  # TODO: is this second statement correct? what about 'cone'shape in a certain radius around home?
+        elif (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] > max_height_within_RTL_MIN_DIST): 
             assert max(height_after_RTL) < height_after_RTL[0] + thresh
 
         elif (distance_after_RTL[0] > rtl_min_dist) & (height_after_RTL[0] < rtl_return_alt): 
