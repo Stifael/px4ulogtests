@@ -103,35 +103,36 @@ class TestRTLHeight:
 
         posanl.add_horizontal_distance(self.df)
 
-        # Check vehicle status for RTL trigger
-        # store all distance and height values that are reached ONLY DURING RTL in a new array
-        distance_after_RTL = []
-        height_after_RTL = []
-        for i in range(self.df.T_vehicle_status_0__F_nav_state.count() - 1):
+        # Run the test every time that RTL was triggered
+        self.df['T_vehicle_status_0__F_nav_state_group2'] = (self.df.T_vehicle_status_0__F_nav_state != self.df.T_vehicle_status_0__F_nav_state.shift()).cumsum()
+        state_group = self.df.groupby(['T_vehicle_status_0__F_nav_state_group2'])
+        for g, d in state_group:
+            # Check that RTL was actually triggered 
             # at least two consecutive T_vehicle_status_0__F_nav_state values have to be equal to NAVIGATION_STATE_AUTO_RTL in order to confirm that RTL has been triggered
-            # TODO if RTL was triggered more than once during a flight, look for the maximum height for every time RTL was triggered
-            if self.df.T_vehicle_status_0__F_nav_state.iloc[i] == NAVIGATION_STATE_AUTO_RTL and \
-            self.df.T_vehicle_status_0__F_nav_state.iloc[i+1] == NAVIGATION_STATE_AUTO_RTL:
-                distance_after_RTL.append(self.df.T_vehicle_local_position_0__NF_abs_horizontal_dist.iloc[i])
-                height_after_RTL.append(abs(self.df.T_vehicle_local_position_0__F_z.iloc[i]))
+            if d.T_vehicle_status_0__F_nav_state.count() > 1 and d.T_vehicle_status_0__F_nav_state[0] == NAVIGATION_STATE_AUTO_RTL:
+                height_at_RTL = abs(d.T_vehicle_local_position_0__F_z[0])
+                distance_at_RTL = d.T_vehicle_local_position_0__NF_abs_horizontal_dist[0]
+                max_height_during_RTL = abs(max(d.T_vehicle_local_position_0__F_z))
 
-        if rtl_cone_dist > 0:
-            max_height_within_RTL_MIN_DIST = 2 * distance_after_RTL[0]  # Drone should not rise higher than height defined by a cone (definition taken from rtl.cpp file in firmware)
-        else:
-            max_height_within_RTL_MIN_DIST = height_after_RTL[0]        # If no cone is defined, drone should not rise at all within certain radius around home
-        
-        # check if a value of the z position after triggering RTL is larger than allowed value
-        if (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] < max_height_within_RTL_MIN_DIST):
-            assert max(height_after_RTL) < max_height_within_RTL_MIN_DIST + thresh
+                if rtl_cone_dist > 0:
+                    # Drone should not rise higher than height defined by a cone (definition taken from rtl.cpp file in firmware)
+                    max_height_within_RTL_MIN_DIST = 2 * distance_at_RTL
+                else:
+                    # If no cone is defined, drone should not rise at all within certain radius around home
+                    max_height_within_RTL_MIN_DIST = height_at_RTL
+                
+                # check if a value of the z position after triggering RTL is larger than allowed value
+                if (distance_at_RTL < rtl_min_dist) & (height_at_RTL < max_height_within_RTL_MIN_DIST):
+                    assert max_height_during_RTL < max_height_within_RTL_MIN_DIST + thresh
 
-        elif (distance_after_RTL[0] < rtl_min_dist) & (height_after_RTL[0] > max_height_within_RTL_MIN_DIST): 
-            assert max(height_after_RTL) < height_after_RTL[0] + thresh
+                elif (distance_at_RTL < rtl_min_dist) & (height_at_RTL >= max_height_within_RTL_MIN_DIST): 
+                    assert max_height_during_RTL < height_at_RTL + thresh
 
-        elif (distance_after_RTL[0] > rtl_min_dist) & (height_after_RTL[0] < rtl_return_alt): 
-            assert max(height_after_RTL) < rtl_return_alt + thresh
+                elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL < rtl_return_alt): 
+                    assert max_height_during_RTL < rtl_return_alt + thresh
 
-        elif (distance_after_RTL[0] > rtl_min_dist) & (height_after_RTL[0] > rtl_return_alt): 
-            assert max(height_after_RTL) < height_after_RTL[0] + thresh
+                elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL > rtl_return_alt): 
+                    assert max_height_during_RTL < height_at_RTL + thresh
 
 
 
