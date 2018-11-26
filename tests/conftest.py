@@ -2,6 +2,8 @@
 # the argument is stored and can be given as an argument to tests
 
 import pytest
+import os
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -9,6 +11,14 @@ def pytest_addoption(parser):
     )
 
 # With scope set to module, the fixture function only gets invoked once per module
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session")
 def filepath(request):
     return request.config.getoption("--filepath")
+
+    
+@pytest.fixture(scope="session")
+def filecheck(filepath):
+    # ensure it is a ulg file
+    base, ext = os.path.splitext(filepath)
+    if ext.lower() not in (".ulg") or not filepath:
+        pytest.exit("passed file is not a .ulg file.")

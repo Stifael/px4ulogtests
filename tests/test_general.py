@@ -12,19 +12,13 @@ import os
 import numpy as np
 import pytest
 
-@pytest.fixture(scope="module")
-def filecheck(filepath):
-    # ensure it is a ulg file
-    base, ext = os.path.splitext(filepath)
-    if ext.lower() not in (".ulg") or not filepath:
-        pytest.exit("passed file is not a .ulg file.")
 
 
 class TestAttitude:
     """
     Test Attitude related constraints
     """
-
+    
     def test_tilt_desired(self, filecheck, filepath):
         topics = [
             "vehicle_attitude",
