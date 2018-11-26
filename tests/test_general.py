@@ -28,7 +28,7 @@ class TestAttitude:
         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
     
-    def test_tilt_desired(self, filecheck, filepath):
+    def test_tilt_desired(self, filepath):
 
         TestAttitude.setup_dataframe(self, filepath)
 
@@ -66,7 +66,7 @@ class TestRTLHeight:
         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
 
-    def test_rtl(self, filecheck, filepath):
+    def test_rtl(self, filepath):
 
         TestRTLHeight.setup_dataframe(self, filepath)
 
