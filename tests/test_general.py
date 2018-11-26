@@ -13,7 +13,6 @@ import numpy as np
 import pytest
 
 
-
 class TestAttitude:
     """
     Test Attitude related constraints
