@@ -17,8 +17,8 @@ class TestAttitude:
     """
     Test Attitude related constraints
     """
-    
-    def test_tilt_desired(self, filecheck, filepath):
+
+    def setup_dataframe(self, filepath):
         topics = [
             "vehicle_attitude",
             "vehicle_attitude_setpoint",
@@ -26,6 +26,11 @@ class TestAttitude:
         ]
         self.ulog = pyulog.ULog(filepath, topics)
         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+
+    
+    def test_tilt_desired(self, filecheck, filepath):
+
+        TestAttitude.setup_dataframe(self, filepath)
 
         # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
         # MPC_MAN_TILT_MAX
@@ -52,14 +57,18 @@ class TestRTLHeight:
     # check the height above ground while the drone returns to home. compare it with 
     # the allowed maximum or minimum heights, until the drone has reached home and motors have been turned off
 
-   def test_rtl(self, filecheck, filepath):
-        # set up class
+    def setup_dataframe(self, filepath):
         topics = [
             "vehicle_local_position",
             "vehicle_status",
         ]
         self.ulog = pyulog.ULog(filepath, topics)
         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+        
+
+    def test_rtl(self, filecheck, filepath):
+
+        TestRTLHeight.setup_dataframe(self, filepath)
 
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
