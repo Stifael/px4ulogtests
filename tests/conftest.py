@@ -8,6 +8,7 @@ def pytest_addoption(parser):
         "--filepath", action="store", default="Please pass absolute log file path as argument", help="absolute path to log file"
     )
 
-@pytest.fixture
+# With scope set to module, the fixture function only gets invoked once per module
+@pytest.fixture(scope="module")
 def filepath(request):
     return request.config.getoption("--filepath")

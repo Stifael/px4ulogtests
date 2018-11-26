@@ -12,7 +12,8 @@ import os
 import numpy as np
 import pytest
 
-def setup_class(self, topics, filepath):
+
+def file_path(self, topics, filepath):
     self.ulog = pyulog.ULog(filepath, topics)
     self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
@@ -33,7 +34,7 @@ class TestAttitude:
             "vehicle_attitude_setpoint",
             "vehicle_status",
         ]
-        setup_class(self, topics, filepath)
+        file_path(self, topics, filepath)
 
         # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
         # MPC_MAN_TILT_MAX
@@ -66,7 +67,7 @@ class TestRTLHeight:
             "vehicle_local_position",
             "vehicle_status",
         ]
-        setup_class(self, topics, filepath)
+        file_path(self, topics, filepath)
 
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
@@ -127,12 +128,12 @@ class TestRTLHeight:
             # "topic1",
             # "topic2",
         # ]
-        # setup_class(self, topics, filepath)
+        # file_path(self, topics, filepath)
 #        assert True
 #    def test_2(self, filepath):
         # topics = [
             # "topic1",
             # "topic2",
         # ]
-        # setup_class(self, topics, filepath)
+        # file_path(self, topics, filepath)
 #        assert True

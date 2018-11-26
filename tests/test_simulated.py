@@ -10,7 +10,7 @@ import os
 import numpy as np
 import pytest
 
-def setup_class(self, topics, filepath):
+def file_path(self, topics, filepath):
     self.ulog = pyulog.ULog(filepath, topics)
     self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
@@ -27,7 +27,12 @@ def setup_class(self, topics, filepath):
             # "topic1",
             # "topic2",
         # ]
-        # setup_class(self, topics, filepath)
+        # file_path(self, topics, filepath)
 #        assert True
 #    def test_2(self, filepath):
+        # topics = [
+            # "topic1",
+            # "topic2",
+        # ]
+        # file_path(self, topics, filepath)
 #        assert True
