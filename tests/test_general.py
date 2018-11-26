@@ -12,21 +12,10 @@ import os
 import numpy as np
 import pytest
 
+def setup_class(self, topics, filepath):
+    self.ulog = pyulog.ULog(filepath, topics)
+    self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
-def getfilepath():
-    currentpath = os.path.dirname(os.path.realpath(__file__))
-    for f in os.listdir(currentpath + "/../inputlog"):
-        if f:
-            filepath = f
-            break
-    return currentpath + "/../inputlog/" + filepath
-
-
-def setup_module(module):
-    """
-    Check if file exists. Otherwise don't bother to run all the tests
-    """
-    filepath = getfilepath()
     # ensure it is a ulg file
     base, ext = os.path.splitext(filepath)
     if ext.lower() not in (".ulg") or not filepath:
@@ -38,17 +27,13 @@ class TestAttitude:
     Test Attitude related constraints
     """
 
-    def setup_class(self):
-        filepath = getfilepath()
+    def test_tilt_desired(self, filepath):
         topics = [
             "vehicle_attitude",
             "vehicle_attitude_setpoint",
             "vehicle_status",
         ]
-        self.ulog = pyulog.ULog(filepath, topics)
-        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-
-    def test_tilt_desired(self):
+        setup_class(self, topics, filepath)
 
         # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
         # MPC_MAN_TILT_MAX
@@ -75,18 +60,14 @@ class TestRTLHeight:
     # check the height above ground while the drone returns to home. compare it with 
     # the allowed maximum or minimum heights, until the drone has reached home and motors have been turned off
 
-   def setup_class(self):
-        # get the required data
-        filepath = getfilepath()
+   def test_rtl(self, filepath):
+        # set up class
         topics = [
             "vehicle_local_position",
             "vehicle_status",
         ]
-        self.ulog = pyulog.ULog(filepath, topics)
-        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+        setup_class(self, topics, filepath)
 
-
-   def test_rtl(self):
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
             loginfo.get_param(self.ulog, "RTL_MIN_DIST", 0)
@@ -108,7 +89,8 @@ class TestRTLHeight:
         state_group = self.df.groupby(['T_vehicle_status_0__F_nav_state_group2'])
         for g, d in state_group:
             # Check that RTL was actually triggered 
-            # at least two consecutive T_vehicle_status_0__F_nav_state values have to be equal to NAVIGATION_STATE_AUTO_RTL in order to confirm that RTL has been triggered
+            # at least two consecutive T_vehicle_status_0__F_nav_state values have to 
+            # be equal to NAVIGATION_STATE_AUTO_RTL in order to confirm that RTL has been triggered
             if d.T_vehicle_status_0__F_nav_state.count() > 1 and d.T_vehicle_status_0__F_nav_state[0] == NAVIGATION_STATE_AUTO_RTL:
                 height_at_RTL = abs(d.T_vehicle_local_position_0__F_z[0])
                 distance_at_RTL = d.T_vehicle_local_position_0__NF_abs_horizontal_dist[0]
@@ -140,16 +122,17 @@ class TestRTLHeight:
 
 # class TestSomething:
 #
-#    def setup_class(self):
-#        # get the required data
-#        filepath = getfilepath()
-#        topics = [
-#            ""
-#        ]
-#        self.ulog = pyulog.ULog(filepath, topics)
-#        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-#
-#    def test_1(self):
+#    def test_1(self, filepath):
+        # topics = [
+            # "topic1",
+            # "topic2",
+        # ]
+        # setup_class(self, topics, filepath)
 #        assert True
-#    def test_2(self):
+#    def test_2(self, filepath):
+        # topics = [
+            # "topic1",
+            # "topic2",
+        # ]
+        # setup_class(self, topics, filepath)
 #        assert True

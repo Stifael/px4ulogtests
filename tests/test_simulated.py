@@ -10,40 +10,24 @@ import os
 import numpy as np
 import pytest
 
+def setup_class(self, topics, filepath):
+    self.ulog = pyulog.ULog(filepath, topics)
+    self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
-def getfilepath():
-    currentpath = os.path.dirname(os.path.realpath(__file__))
-    for f in os.listdir(currentpath + "/../inputlog"):
-        if f:
-            filepath = f
-            break
-    return currentpath + "/../inputlog/" + filepath
-
-
-def setup_module(module):
-    """
-    Check if file exists. Otherwise don't bother to run all the tests
-    """
-    filepath = getfilepath()
     # ensure it is a ulg file
     base, ext = os.path.splitext(filepath)
     if ext.lower() not in (".ulg") or not filepath:
         pytest.exit("Either no file present or not an .ulg file.")
 
 
-
 # class TestSomething:
 #
-#    def setup_class(self):
-#        # get the required data
-#        filepath = getfilepath()
-#        topics = [
-#            ""
-#        ]
-#        self.ulog = pyulog.ULog(filepath, topics)
-#        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-#
-#    def test_1(self):
+#    def test_1(self, filepath):
+        # topics = [
+            # "topic1",
+            # "topic2",
+        # ]
+        # setup_class(self, topics, filepath)
 #        assert True
-#    def test_2(self):
+#    def test_2(self, filepath):
 #        assert True
