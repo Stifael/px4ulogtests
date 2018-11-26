@@ -64,7 +64,7 @@ class TestRTLHeight:
         ]
         self.ulog = pyulog.ULog(filepath, topics)
         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-        
+
 
     def test_rtl(self, filecheck, filepath):
 
@@ -123,18 +123,18 @@ class TestRTLHeight:
 
 
 # class TestSomething:
+# 
+    # def setup_dataframe(self, filepath):
+    #     topics = [
+    #         "topic1",
+    #         "topic2",
+    #     ]
+    #     self.ulog = pyulog.ULog(filepath, topics)
+    #     self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 #
-#    def test_1(self, filepath):
-        # topics = [
-            # "topic1",
-            # "topic2",
-        # ]
-        # file_path(self, topics, filepath)
+    # def test_1(self, filepath):
+        # TestSomething.setup_dataframe(self, filepath)
 #        assert True
 #    def test_2(self, filepath):
-        # topics = [
-            # "topic1",
-            # "topic2",
-        # ]
-        # file_path(self, topics, filepath)
+        # TestSomething.setup_dataframe(self, filepath)
 #        assert True
