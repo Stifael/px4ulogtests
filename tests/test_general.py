@@ -12,15 +12,12 @@ import os
 import numpy as np
 import pytest
 
-
-def file_path(self, topics, filepath):
-    self.ulog = pyulog.ULog(filepath, topics)
-    self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-
+@pytest.fixture(scope="module")
+def filecheck(filepath):
     # ensure it is a ulg file
     base, ext = os.path.splitext(filepath)
     if ext.lower() not in (".ulg") or not filepath:
-        pytest.exit("Either no file present or not an .ulg file.")
+        pytest.exit("passed file is not a .ulg file.")
 
 
 class TestAttitude:
@@ -28,13 +25,14 @@ class TestAttitude:
     Test Attitude related constraints
     """
 
-    def test_tilt_desired(self, filepath):
+    def test_tilt_desired(self, filecheck, filepath):
         topics = [
             "vehicle_attitude",
             "vehicle_attitude_setpoint",
             "vehicle_status",
         ]
-        file_path(self, topics, filepath)
+        self.ulog = pyulog.ULog(filepath, topics)
+        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
         # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
         # MPC_MAN_TILT_MAX
@@ -61,13 +59,14 @@ class TestRTLHeight:
     # check the height above ground while the drone returns to home. compare it with 
     # the allowed maximum or minimum heights, until the drone has reached home and motors have been turned off
 
-   def test_rtl(self, filepath):
+   def test_rtl(self, filecheck, filepath):
         # set up class
         topics = [
             "vehicle_local_position",
             "vehicle_status",
         ]
-        file_path(self, topics, filepath)
+        self.ulog = pyulog.ULog(filepath, topics)
+        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
