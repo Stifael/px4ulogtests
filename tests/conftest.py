@@ -16,7 +16,7 @@ def filepath(request):
     return request.config.getoption("--filepath")
 
     
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def filecheck(filepath):
     # ensure it is a ulg file
     base, ext = os.path.splitext(filepath)
