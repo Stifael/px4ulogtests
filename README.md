@@ -51,13 +51,13 @@ deactivate
 ```
 
 ### test a ulog file 
-To test a specific ulog file, put that file into the `inputlog` directory. Make sure that only one file is present, otherwise the first file found will be chosen. (TODO improve how ulog files are read)
+To test a log file, pass its absolute path as a command line argument (see example below)
 
 All the tests are in the `tests` directory. Tests should be split into tests that apply for any ulog file and tests that are coupled to a specific simulated test.
 
 To run general tests:
 ```bash
-py.test tests/test_general.py
+py.test tests/test_general.py --filepath=absolute/path/to/logfile.ulg
 ```
 
 With the current default log, the test for tilt will fail because the vehicle flipped during the actual flight. 
