@@ -32,23 +32,34 @@ class TestAttitude:
 
         TestAttitude.setup_dataframe(self, filepath)
 
-        # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
-        # MPC_MAN_TILT_MAX
+        # check if needed messages actually exist in dataframe (check also for messages that are needed to create new messages!)
+        if "T_vehicle_status_0__F_nav_state" not in self.df or \
+        "T_vehicle_attitude_setpoint_0__F_q_d_0" not in self.df or \
+        "T_vehicle_attitude_setpoint_0__F_q_d_1" not in self.df or \
+        "T_vehicle_attitude_setpoint_0__F_q_d_2" not in self.df or \
+        "T_vehicle_attitude_setpoint_0__F_q_d_3" not in self.df:
+            print("One or several messages that are needed for this test were not available in the provided log file!")
+            # pytest.skip("missing message")
+            assert False
 
-        attanl.add_desired_tilt(self.df)
-        man_tilt = (
-            loginfo.get_param(self.ulog, "MPC_MAN_TILT_MAX", 0) * np.pi / 180
-        )
-        assert self.df[
-            (
-                (self.df.T_vehicle_status_0__F_nav_state == 0)
-                | (self.df.T_vehicle_status_0__F_nav_state == 1)
+        else:
+            # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
+            # MPC_MAN_TILT_MAX
+
+            attanl.add_desired_tilt(self.df)
+            man_tilt = (
+                loginfo.get_param(self.ulog, "MPC_MAN_TILT_MAX", 0) * np.pi / 180
             )
-            & (
-                self.df.T_vehicle_attitude_setpoint_0__NF_tilt_desired
-                > man_tilt
-            )
-        ].empty
+            assert self.df[
+                (
+                    (self.df.T_vehicle_status_0__F_nav_state == 0)
+                    | (self.df.T_vehicle_status_0__F_nav_state == 1)
+                )
+                & (
+                    self.df.T_vehicle_attitude_setpoint_0__NF_tilt_desired
+                    > man_tilt
+                )
+            ].empty
 
 
 class TestRTLHeight:
@@ -70,54 +81,80 @@ class TestRTLHeight:
 
         TestRTLHeight.setup_dataframe(self, filepath)
 
-        # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
-        rtl_min_dist = (
-            loginfo.get_param(self.ulog, "RTL_MIN_DIST", 0)
-        )
-        rtl_return_alt = (
-            loginfo.get_param(self.ulog, "RTL_RETURN_ALT", 0)
-        )
-        rtl_cone_dist = (
-            loginfo.get_param(self.ulog, "RTL_CONE_DIST", 0)
-        )
+        # check if needed messages actually exist in dataframe (check also for messages that are needed to create new messages!)
+        if "T_vehicle_status_0__F_nav_state" not in self.df or \
+        "T_vehicle_local_position_0__F_x" not in self.df or \
+        "T_vehicle_local_position_0__F_y" not in self.df or \
+        "T_vehicle_local_position_0__F_z" not in self.df:
+            print("One or several messages that are needed for this test were not available in the provided log file!")
+            # pytest.skip("missing message")
+            assert False
 
-        NAVIGATION_STATE_AUTO_RTL = 5           # see https://github.com/PX4/Firmware/blob/master/msg/vehicle_status.msg
-        thresh = 1                              # Threshold for position inaccuracies, in meters
+        else:
+            # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
+            rtl_min_dist = (
+                loginfo.get_param(self.ulog, "RTL_MIN_DIST", 0)
+            )
+            rtl_return_alt = (
+                loginfo.get_param(self.ulog, "RTL_RETURN_ALT", 0)
+            )
+            rtl_cone_dist = (
+                loginfo.get_param(self.ulog, "RTL_CONE_DIST", 0)
+            )
 
-        posanl.add_horizontal_distance(self.df)
+            NAVIGATION_STATE_AUTO_RTL = 5           # see https://github.com/PX4/Firmware/blob/master/msg/vehicle_status.msg
+            thresh = 1                              # Threshold for position inaccuracies, in meters
 
-        # Run the test every time that RTL was triggered
-        self.df['T_vehicle_status_0__F_nav_state_group2'] = (self.df.T_vehicle_status_0__F_nav_state != self.df.T_vehicle_status_0__F_nav_state.shift()).cumsum()
-        state_group = self.df.groupby(['T_vehicle_status_0__F_nav_state_group2'])
-        for g, d in state_group:
-            # Check that RTL was actually triggered 
-            # at least two consecutive T_vehicle_status_0__F_nav_state values have to 
-            # be equal to NAVIGATION_STATE_AUTO_RTL in order to confirm that RTL has been triggered
-            if d.T_vehicle_status_0__F_nav_state.count() > 1 and d.T_vehicle_status_0__F_nav_state[0] == NAVIGATION_STATE_AUTO_RTL:
-                height_at_RTL = abs(d.T_vehicle_local_position_0__F_z[0])
-                distance_at_RTL = d.T_vehicle_local_position_0__NF_abs_horizontal_dist[0]
-                max_height_during_RTL = abs(max(d.T_vehicle_local_position_0__F_z))
+            posanl.add_horizontal_distance(self.df)
 
-                if rtl_cone_dist > 0:
-                    # Drone should not rise higher than height defined by a cone (definition taken from rtl.cpp file in firmware)
-                    max_height_within_RTL_MIN_DIST = 2 * distance_at_RTL
-                else:
-                    # If no cone is defined, drone should not rise at all within certain radius around home
-                    max_height_within_RTL_MIN_DIST = height_at_RTL
-                
-                # check if a value of the z position after triggering RTL is larger than allowed value
-                if (distance_at_RTL < rtl_min_dist) & (height_at_RTL < max_height_within_RTL_MIN_DIST):
-                    assert max_height_during_RTL < max_height_within_RTL_MIN_DIST + thresh
+            # Run the test every time that RTL was triggered
+            self.df['T_vehicle_status_0__F_nav_state_group2'] = (self.df.T_vehicle_status_0__F_nav_state != self.df.T_vehicle_status_0__F_nav_state.shift()).cumsum()
+            state_group = self.df.groupby(['T_vehicle_status_0__F_nav_state_group2'])
+            for g, d in state_group:
+                # Check that RTL was actually triggered 
+                # at least two consecutive T_vehicle_status_0__F_nav_state values have to 
+                # be equal to NAVIGATION_STATE_AUTO_RTL in order to confirm that RTL has been triggered
+                if d.T_vehicle_status_0__F_nav_state.count() > 1 and d.T_vehicle_status_0__F_nav_state[0] == NAVIGATION_STATE_AUTO_RTL:
+                    height_at_RTL = abs(d.T_vehicle_local_position_0__F_z[0])
+                    distance_at_RTL = d.T_vehicle_local_position_0__NF_abs_horizontal_dist[0]
+                    max_height_during_RTL = abs(max(d.T_vehicle_local_position_0__F_z))
 
-                elif (distance_at_RTL < rtl_min_dist) & (height_at_RTL >= max_height_within_RTL_MIN_DIST): 
-                    assert max_height_during_RTL < height_at_RTL + thresh
+                    if rtl_cone_dist > 0:
+                        # Drone should not rise higher than height defined by a cone (definition taken from rtl.cpp file in firmware)
+                        max_height_within_RTL_MIN_DIST = 2 * distance_at_RTL
+                    else:
+                        # If no cone is defined, drone should not rise at all within certain radius around home
+                        max_height_within_RTL_MIN_DIST = height_at_RTL
+                    
+                    # check if a value of the z position after triggering RTL is larger than allowed value
+                    if (distance_at_RTL < rtl_min_dist) & (height_at_RTL < max_height_within_RTL_MIN_DIST):
+                        assert max_height_during_RTL < max_height_within_RTL_MIN_DIST + thresh
 
-                elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL < rtl_return_alt): 
-                    assert max_height_during_RTL < rtl_return_alt + thresh
+                    elif (distance_at_RTL < rtl_min_dist) & (height_at_RTL >= max_height_within_RTL_MIN_DIST): 
+                        assert max_height_during_RTL < height_at_RTL + thresh
 
-                elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL > rtl_return_alt): 
-                    assert max_height_during_RTL < height_at_RTL + thresh
+                    elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL < rtl_return_alt): 
+                        assert max_height_during_RTL < rtl_return_alt + thresh
 
+                    elif (distance_at_RTL >= rtl_min_dist) & (height_at_RTL > rtl_return_alt): 
+                        assert max_height_during_RTL < height_at_RTL + thresh
+                        
+
+# class TestBlabla:
+
+#     def setup_dataframe(self, filepath):
+#         topics = [
+#             "vehicle_status",
+#             "blabla"
+#         ]
+#         self.ulog = pyulog.ULog(filepath, topics)
+#         self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+
+#         print(list(self.df))
+
+#     def test_1(self, filepath):
+#         TestBlabla.setup_dataframe(self, filepath)
+#         assert True
 
 
 
