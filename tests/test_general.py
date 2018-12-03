@@ -23,6 +23,7 @@ class TestAttitude:
             "vehicle_attitude",
             "vehicle_attitude_setpoint",
             "vehicle_status",
+            "bafd"
         ]
 
         # Check if any of the topics exist in the topics exists in the log file
@@ -33,15 +34,15 @@ class TestAttitude:
             assert False
 
         # Check for every topic separately if it exists in the log file
-        data_list_names = []
         for i in range(len(self.ulog.data_list)):
-            data_list_names.append(self.ulog.data_list[i].name)
+            if self.ulog.data_list[i].name in topics:
+                idx = topics.index(self.ulog.data_list[i].name)
+                topics.pop(idx)
 
-        # check if the number of elements in the two list is the same. If it is not, 
-        # then some topics went missing!
-        if len(topics) != len(data_list_names):
-            print("A needed topic does not exist in the provided ulog file. Abort test.")
-            assert False
+        if len(topics) > 0:
+            print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
+            print(topics)
+            pytest.skip("Skip this test because topics are missing")
         else:
             self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
@@ -89,15 +90,15 @@ class TestRTLHeight:
             assert False
 
         # Check for every topic separately if it exists in the log file
-        data_list_names = []
         for i in range(len(self.ulog.data_list)):
-            data_list_names.append(self.ulog.data_list[i].name)
+            if self.ulog.data_list[i].name in topics:
+                idx = topics.index(self.ulog.data_list[i].name)
+                topics.pop(idx)
 
-        # check if the number of elements in the two list is the same. If it is not, 
-        # then some topics went missing!
-        if len(topics) != len(data_list_names):
-            print("A needed topic does not exist in the provided ulog file. Abort test.")
-            assert False
+        if len(topics) > 0:
+            print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
+            print(topics)
+            pytest.skip("Skip this test because topics are missing")
         else:
             self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
 
@@ -171,18 +172,17 @@ class TestRTLHeight:
         #     assert False
 
         # # Check for every topic separately if it exists in the log file
-        # data_list_names = []
         # for i in range(len(self.ulog.data_list)):
-        #     data_list_names.append(self.ulog.data_list[i].name)
+        #     if self.ulog.data_list[i].name in topics:
+        #         idx = topics.index(self.ulog.data_list[i].name)
+        #         topics.pop(idx)
 
-        # # check if the number of elements in the two list is the same. If it is not, 
-        # # then some topics went missing!
-        # if len(topics) != len(data_list_names):
-        #     print("A needed topic does not exist in the provided ulog file. Abort test.")
-        #     assert False
+        # if len(topics) > 0:
+        #     print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
+        #     print(topics)
+        #     pytest.skip("Skip this test because topics are missing")
         # else:
         #     self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-
 #
     # def test_1(self, filepath):
         # TestSomething.setup_dataframe(self, filepath)
