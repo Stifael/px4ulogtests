@@ -57,8 +57,10 @@ All the tests are in the `tests` directory. Tests should be split into tests tha
 
 To run general tests:
 ```bash
-py.test tests/test_general.py --filepath=absolute/path/to/logfile.ulg
+py.test -s tests/test_general.py --filepath=absolute/path/to/logfile.ulg
 ```
+
+Using -s allows you to see print statements for the skipped tests
 
 With the current default log, the test for tilt will fail because the vehicle flipped during the actual flight. 
 
