@@ -13,43 +13,43 @@ import numpy as np
 import pytest
 
 
+def setup_dataframe(self, filepath, topics):
+    # Check if any of the topics exist in the topics exists in the log file
+    try:
+        self.ulog = pyulog.ULog(filepath, topics)
+    except:
+        print("Not a single topic that is needed for this test exists in the provided ulog file. Abort test")
+        assert False
+
+    # Check for every topic separately if it exists in the log file
+    for i in range(len(self.ulog.data_list)):
+        if self.ulog.data_list[i].name in topics:
+            idx = topics.index(self.ulog.data_list[i].name)
+            topics.pop(idx)
+
+    if len(topics) > 0:
+        print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
+        print(topics)
+        pytest.skip("Skip this test because topics are missing")
+    else:
+        self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
+    
+    # return self
+
+
 class TestAttitude:
     """
     Test Attitude related constraints
     """
+    def test_tilt_desired(self, filepath):
 
-    def setup_dataframe(self, filepath):
         topics = [
             "vehicle_attitude",
             "vehicle_attitude_setpoint",
             "vehicle_status",
-            "bafd"
         ]
 
-        # Check if any of the topics exist in the topics exists in the log file
-        try:
-            self.ulog = pyulog.ULog(filepath, topics)
-        except:
-            print("Not a single topic that is needed for this test exists in the provided ulog file. Abort test")
-            assert False
-
-        # Check for every topic separately if it exists in the log file
-        for i in range(len(self.ulog.data_list)):
-            if self.ulog.data_list[i].name in topics:
-                idx = topics.index(self.ulog.data_list[i].name)
-                topics.pop(idx)
-
-        if len(topics) > 0:
-            print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
-            print(topics)
-            pytest.skip("Skip this test because topics are missing")
-        else:
-            self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-
-    
-    def test_tilt_desired(self, filepath):
-
-        TestAttitude.setup_dataframe(self, filepath)
+        setup_dataframe(self, filepath, topics)
     
         # During Manual / Stabilized and Altitude, the tilt threshdol should not exceed
         # MPC_MAN_TILT_MAX
@@ -76,36 +76,14 @@ class TestRTLHeight:
     # check the height above ground while the drone returns to home. compare it with 
     # the allowed maximum or minimum heights, until the drone has reached home and motors have been turned off
 
-    def setup_dataframe(self, filepath):
+    def test_rtl(self, filepath):
+
         topics = [
             "vehicle_local_position",
             "vehicle_status",
         ]
 
-        # Check if any of the topics exist in the topics exists in the log file
-        try:
-            self.ulog = pyulog.ULog(filepath, topics)
-        except:
-            print("Not a single topic that is needed for this test exists in the provided ulog file. Abort test")
-            assert False
-
-        # Check for every topic separately if it exists in the log file
-        for i in range(len(self.ulog.data_list)):
-            if self.ulog.data_list[i].name in topics:
-                idx = topics.index(self.ulog.data_list[i].name)
-                topics.pop(idx)
-
-        if len(topics) > 0:
-            print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
-            print(topics)
-            pytest.skip("Skip this test because topics are missing")
-        else:
-            self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-
-
-    def test_rtl(self, filepath):
-
-        TestRTLHeight.setup_dataframe(self, filepath)
+        setup_dataframe(self, filepath, topics)
 
         # drone parameters: below rtl_min_dist, the drone follows different rules than outside of it.
         rtl_min_dist = (
@@ -158,35 +136,18 @@ class TestRTLHeight:
 
 
 # class TestSomething:
-# 
-    # def setup_dataframe(self, filepath):
+#
+    # def test_1(self, filepath):
     #     topics = [
     #         "topic1",
     #         "topic2",
     #     ]
-            # Check if any of the topics exist in the topics exists in the log file
-        # try:
-        #     self.ulog = pyulog.ULog(filepath, topics)
-        # except:
-        #     print("Not a single topic that is needed for this test exists in the provided ulog file. Abort test")
-        #     assert False
-
-        # # Check for every topic separately if it exists in the log file
-        # for i in range(len(self.ulog.data_list)):
-        #     if self.ulog.data_list[i].name in topics:
-        #         idx = topics.index(self.ulog.data_list[i].name)
-        #         topics.pop(idx)
-
-        # if len(topics) > 0:
-        #     print("\033[93m" + "The following topics do not exist in the provided ulog file: " + "\033[0m")
-        #     print(topics)
-        #     pytest.skip("Skip this test because topics are missing")
-        # else:
-        #     self.df = ulogconv.merge(ulogconv.createPandaDict(self.ulog))
-#
-    # def test_1(self, filepath):
-        # TestSomething.setup_dataframe(self, filepath)
+    #    setup_dataframe(self, filepath)
 #        assert True
 #    def test_2(self, filepath):
-        # TestSomething.setup_dataframe(self, filepath)
+    #     topics = [
+    #         "topic1",
+    #         "topic2",
+    #     ]
+        # setup_dataframe(self, filepath)
 #        assert True
