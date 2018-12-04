@@ -15,8 +15,7 @@ def pytest_addoption(parser):
 def filepath(request):
     return request.config.getoption("--filepath")
 
-
-# This fixture is run automatically, so it does not have to be called explicitely (because of autouse)    
+    
 @pytest.fixture(scope="session", autouse=True)
 def filecheck(filepath):
     # ensure it is a ulg file
